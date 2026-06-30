@@ -1,0 +1,31 @@
+project_name: "my-server"
+
+docker:
+  containers:
+    - nginx
+    - postgres
+    - redis
+    - api
+
+disk:
+  paths:
+    - path: "/"
+      warning_percent: 80
+      critical_percent: 90
+    - path: "/var/lib/docker"
+      warning_percent: 80
+      critical_percent: 90
+
+http:
+  endpoints:
+    - name: "API Health"
+      url: "https://api.example.com/health"
+      expected_status: 200
+      timeout_seconds: 5
+
+ssl:
+  domains:
+    - "api.example.com"
+    - "example.com"
+  warning_days: 30
+  critical_days: 7

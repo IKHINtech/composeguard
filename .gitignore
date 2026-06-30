@@ -1,0 +1,46 @@
+# Binary output
+composeguard
+composeguard.exe
+bin/
+dist/
+build/
+
+# Go build/test artifacts
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Go workspace
+go.work
+go.work.sum
+
+# Local config
+composeguard.yaml
+*.local.yaml
+*.local.yml
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Docker local files
+docker-compose.override.yml
