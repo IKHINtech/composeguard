@@ -14,5 +14,5 @@ A lightweight Go CLI to monitor Docker Compose services, disk usage, HTTP health
 ## Install
 
 ```bash
-go install github.com/USERNAME/composeguard/cmd/composeguard@latest
+go install github.com/IKHINtech/composeguard/cmd/composeguard@latest
 ```
