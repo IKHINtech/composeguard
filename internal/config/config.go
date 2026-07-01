@@ -1,16 +1,19 @@
+// Package config...
 package config
 
 import (
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	ProjectName string       `yaml:"project_name"`
-	Docker      DockerConfig `yaml:"docker"`
-	Disk        DiskConfig   `yaml:"disk"`
-	HTTP        HTTPConfig   `yaml:"http"`
-	SSL         SSLConfig    `yaml:"ssl"`
+	ProjectName  string             `yaml:"project_name"`
+	Docker       DockerConfig       `yaml:"docker"`
+	Disk         DiskConfig         `yaml:"disk"`
+	HTTP         HTTPConfig         `yaml:"http"`
+	SSL          SSLConfig          `yaml:"ssl"`
+	Notification NotificationConfig `yaml:"notification"`
 }
 
 type DockerConfig struct {
@@ -55,4 +58,15 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+type NotificationConfig struct {
+	Telegram TelegramConfig `yaml:"telegram"`
+}
+
+type TelegramConfig struct {
+	Enabled       bool   `yaml:"enabled"`
+	BotToken      string `yaml:"bot_token"`
+	ChatID        string `yaml:"chat_id"`
+	OnlyOnProblem bool   `yaml:"only_on_problem"`
 }

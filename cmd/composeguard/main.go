@@ -11,6 +11,8 @@ import (
 	"github.com/IKHINtech/composeguard/internal/diskcheck"
 	"github.com/IKHINtech/composeguard/internal/dockercheck"
 	"github.com/IKHINtech/composeguard/internal/httpcheck"
+	"github.com/IKHINtech/composeguard/internal/notifier"
+	telegramnotifier "github.com/IKHINtech/composeguard/internal/notifier/telegram"
 	"github.com/IKHINtech/composeguard/internal/sslcheck"
 )
 
@@ -120,6 +122,10 @@ func runCheck() {
 	} else {
 		printReport(cfg.ProjectName, results)
 	}
+
+	if getArgValue("--notify") == "telegram" {
+		sendTelegramNotification(cfg, results)
+	}
 	if hasCritical(results) {
 		os.Exit(2)
 	}
@@ -127,6 +133,29 @@ func runCheck() {
 	if hasWarning(results) {
 		os.Exit(1)
 	}
+}
+
+func sendTelegramNotification(cfg *config.Config, results []checker.Result) {
+	telegramCfg := cfg.Notification.Telegram
+	if !telegramCfg.Enabled {
+		fmt.Println("telegram notifications are disabled")
+		return
+	}
+
+	hasProblem := hasCritical(results) || hasWarning(results)
+	if telegramCfg.OnlyOnProblem && !hasProblem {
+		fmt.Println("telegram notification skipped: no problem found")
+		return
+	}
+
+	message := notifier.BuidMessage(cfg.ProjectName, cleanResults(results))
+
+	if err := telegramnotifier.Send(telegramCfg, message); err != nil {
+		fmt.Printf("failed to send telegram notification: %v\n", err)
+		return
+	}
+
+	fmt.Println("telegram notification sent")
 }
 
 func isValidOnly(value string) bool {
@@ -239,6 +268,12 @@ Usage:
 	composeguard init
   composeguard check
   composeguard check --config composeguard.yaml
+	composeguard check --json
+  composeguard check --only docker
+  composeguard check --only disk
+  composeguard check --only http
+  composeguard check --only ssl
+	composeguard check --notify telegram
   composeguard version`)
 }
 
