@@ -76,8 +76,10 @@ ssl:
 }
 
 func runCheck() {
-	configPath := defaultConfigPath
-
+	configPath := getArgValue("--config")
+	if configPath == "" {
+		configPath = defaultConfigPath
+	}
 	if len(os.Args) >= 4 && os.Args[2] == "--config" {
 		configPath = os.Args[3]
 	}
@@ -89,6 +91,11 @@ func runCheck() {
 	}
 
 	only := getArgValue("--only")
+	if !isValidOnly(only) {
+		fmt.Printf("invalid --only value: %s\n", only)
+		fmt.Println("valid values: docker, disk, http, ssl")
+		os.Exit(1)
+	}
 
 	results := make([]checker.Result, 0)
 
@@ -119,6 +126,15 @@ func runCheck() {
 
 	if hasWarning(results) {
 		os.Exit(1)
+	}
+}
+
+func isValidOnly(value string) bool {
+	switch value {
+	case "", "docker", "disk", "http", "ssl":
+		return true
+	default:
+		return false
 	}
 }
 
