@@ -51,3 +51,17 @@ composeguard check --only disk
 composeguard check --only http
 composeguard check --only ssl
 ```
+
+### Run with telegram Notification
+
+```bash
+composeguard check --notify telegram
+
+```
+
+### release
+
+```bash
+git tag -a v0.1.0 -m "composeguard v0.1.0"
+git push origin v0.1.0
+```
