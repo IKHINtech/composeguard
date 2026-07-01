@@ -1,0 +1,24 @@
+[Unit]
+Description=ComposeGuard health check
+Documentation=https://github.com/IKHINtech/composeguard
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/composeguard/composeguard.env
+ExecStart=/usr/local/bin/composeguard check --config /etc/composeguard/composeguard.yaml --notify telegram
+
+User=root
+Group=root
+
+Nice=5
+IOSchedulingClass=best-effort
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run ComposeGuard health check every 10 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=10min
+AccuracySec=30s
+Unit=composeguard.service
+
+[Install]
+WantedBy=timers.target
