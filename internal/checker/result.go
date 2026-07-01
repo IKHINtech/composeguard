@@ -10,7 +10,7 @@ const (
 )
 
 type Result struct {
-	Name    string
-	Status  Status
-	Message string
+	Name    string `json:"name"`
+	Status  Status `json:"status"`
+	Message string `json:"message"`
 }

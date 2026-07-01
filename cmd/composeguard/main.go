@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/IKHINtech/composeguard/internal/checker"
 	"github.com/IKHINtech/composeguard/internal/config"
@@ -93,8 +95,11 @@ func runCheck() {
 	results = append(results, httpcheck.Check(cfg.HTTP.Endpoints)...)
 	results = append(results, sslcheck.Check(cfg.SSL)...)
 
-	printReport(cfg.ProjectName, results)
-
+	if hasArg("--json") {
+		printJSONReport(cfg.ProjectName, results)
+	} else {
+		printReport(cfg.ProjectName, results)
+	}
 	if hasCritical(results) {
 		os.Exit(2)
 	}
@@ -102,6 +107,39 @@ func runCheck() {
 	if hasWarning(results) {
 		os.Exit(1)
 	}
+}
+
+func printJSONReport(projectName string, results []checker.Result) {
+	payload := struct {
+		ProjectName string           `json:"project_name"`
+		Results     []checker.Result `json:"results"`
+	}{
+		ProjectName: projectName,
+		Results:     cleanResults(results),
+	}
+	raw, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		fmt.Printf("failed to render json: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(string(raw))
+}
+
+func cleanResults(results []checker.Result) []checker.Result {
+	cleaned := make([]checker.Result, 0, len(results))
+	for _, result := range results {
+		if result.Name == "" && result.Message == "" && result.Status == "" {
+			continue
+		}
+
+		if result.Status == "" {
+			result.Status = checker.StatusUnknown
+		}
+
+		cleaned = append(cleaned, result)
+	}
+	return cleaned
 }
 
 func printReport(projectName string, results []checker.Result) {
@@ -159,6 +197,10 @@ func hasWarning(results []checker.Result) bool {
 	}
 
 	return false
+}
+
+func hasArg(name string) bool {
+	return slices.Contains(os.Args, name)
 }
 
 func printUsage() {
