@@ -27,10 +27,50 @@ func main() {
 		runCheck()
 	case "version":
 		fmt.Println("composeguard v0.1.0")
+	case "init":
+		runInit()
 	default:
 		printUsage()
 		os.Exit(1)
 	}
+}
+
+func runInit() {
+	const target = "composeguard.yaml"
+	if _, err := os.Stat(target); err == nil {
+		fmt.Println("composeguard.yaml already exists")
+		os.Exit(1)
+	}
+
+	content := `project_name: "my-server"
+
+docker:
+  containers: []
+
+disk:
+  paths:
+    - path: "/"
+      warning_percent: 80
+      critical_percent: 90
+
+http:
+  endpoints:
+    - name: "API Health"
+      url: "https://example.com/health"
+      expected_status: 200
+      timeout_seconds: 5
+
+ssl:
+  domains:
+    - "example.com"
+  warning_days: 30
+  critical_days: 7
+`
+	if err := os.WriteFile(target, []byte(content), 0o644); err != nil {
+		fmt.Printf("failed to create composeguard.yaml: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("composeguard.yaml created")
 }
 
 func runCheck() {
@@ -74,6 +114,10 @@ func printReport(projectName string, results []checker.Result) {
 	fmt.Println("================================")
 
 	for _, result := range results {
+		if result.Name == "" && result.Message == "" && result.Status == "" {
+			continue
+		}
+
 		if result.Status == "" {
 			result.Status = checker.StatusUnknown
 		}
@@ -121,6 +165,7 @@ func printUsage() {
 	fmt.Println(`composeguard - lightweight Docker Compose server health monitor
 
 Usage:
+	composeguard init
   composeguard check
   composeguard check --config composeguard.yaml
   composeguard version`)
