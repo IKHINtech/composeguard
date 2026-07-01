@@ -88,12 +88,25 @@ func runCheck() {
 		os.Exit(1)
 	}
 
+	only := getArgValue("--only")
+
 	results := make([]checker.Result, 0)
 
-	results = append(results, dockercheck.CheckContainers(cfg.Docker.Containers)...)
-	results = append(results, diskcheck.Check(cfg.Disk.Paths)...)
-	results = append(results, httpcheck.Check(cfg.HTTP.Endpoints)...)
-	results = append(results, sslcheck.Check(cfg.SSL)...)
+	if only == "" || only == "docker" {
+		results = append(results, dockercheck.CheckContainers(cfg.Docker.Containers)...)
+	}
+
+	if only == "" || only == "disk" {
+		results = append(results, diskcheck.Check(cfg.Disk.Paths)...)
+	}
+
+	if only == "" || only == "http" {
+		results = append(results, httpcheck.Check(cfg.HTTP.Endpoints)...)
+	}
+
+	if only == "" || only == "ssl" {
+		results = append(results, sslcheck.Check(cfg.SSL)...)
+	}
 
 	if hasArg("--json") {
 		printJSONReport(cfg.ProjectName, results)
@@ -211,4 +224,13 @@ Usage:
   composeguard check
   composeguard check --config composeguard.yaml
   composeguard version`)
+}
+
+func getArgValue(name string) string {
+	for i, arg := range os.Args {
+		if arg == name && i+1 < len(os.Args) {
+			return os.Args[i+1]
+		}
+	}
+	return ""
 }
