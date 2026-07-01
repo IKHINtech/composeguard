@@ -24,3 +24,30 @@ go install github.com/IKHINtech/composeguard/cmd/composeguard@latest
 ```bash
 composeguard init
 ```
+
+### Run All Check
+
+```bash
+composeguard check
+```
+
+### Use custom config
+
+```bash
+composeguard check --config /etc/composeguard.yaml
+```
+
+### Output JSON
+
+```bash
+composeguard check --json
+```
+
+### Run specific check
+
+```bash
+composeguard check --only docker
+composeguard check --only disk
+composeguard check --only http
+composeguard check --only ssl
+```
