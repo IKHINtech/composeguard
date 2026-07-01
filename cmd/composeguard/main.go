@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"slices"
 
 	"github.com/IKHINtech/composeguard/internal/checker"
@@ -20,6 +21,23 @@ const defaultConfigPath = "composeguard.yaml"
 
 var version = "dev"
 
+func resolvedVersion() string {
+	if version != "dev" && version != "" {
+		return version
+	}
+
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return version
+	}
+
+	if info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+
+	return version
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -32,7 +50,7 @@ func main() {
 	case "check":
 		runCheck()
 	case "version":
-		fmt.Printf("composeguard %s \n", version)
+		fmt.Printf("composeguard %s \n", resolvedVersion())
 	case "init":
 		runInit()
 	default:
