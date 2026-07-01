@@ -18,6 +18,8 @@ import (
 
 const defaultConfigPath = "composeguard.yaml"
 
+var version = "dev"
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -30,7 +32,7 @@ func main() {
 	case "check":
 		runCheck()
 	case "version":
-		fmt.Println("composeguard v0.1.0")
+		fmt.Printf("composeguard %s \n", version)
 	case "init":
 		runInit()
 	default:
@@ -69,6 +71,13 @@ ssl:
     - "example.com"
   warning_days: 30
   critical_days: 7
+
+notification:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+    only_on_problem: true
 `
 	if err := os.WriteFile(target, []byte(content), 0o644); err != nil {
 		fmt.Printf("failed to create composeguard.yaml: %v\n", err)
