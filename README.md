@@ -83,6 +83,29 @@ notification:
     only_on_problem: true
 ```
 
+### Usage
+
+```bash
+composeguard init
+composeguard check
+composeguard check --config composeguard.yaml
+composeguard check --json
+composeguard check --only docker
+composeguard check --only disk
+composeguard check --only http
+composeguard check --only ssl
+composeguard check --notify telegram
+
+composeguard discover
+composeguard discover --table
+composeguard discover --running-only
+composeguard discover --write
+composeguard discover --config composeguard.yaml --write
+
+composeguard install-systemd
+composeguard version`)
+```
+
 ### Run All Check
 
 ```bash

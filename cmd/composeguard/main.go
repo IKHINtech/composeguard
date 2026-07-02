@@ -9,6 +9,7 @@ import (
 
 	"github.com/IKHINtech/composeguard/internal/checker"
 	"github.com/IKHINtech/composeguard/internal/config"
+	"github.com/IKHINtech/composeguard/internal/discovery"
 	"github.com/IKHINtech/composeguard/internal/diskcheck"
 	"github.com/IKHINtech/composeguard/internal/dockercheck"
 	"github.com/IKHINtech/composeguard/internal/httpcheck"
@@ -48,12 +49,14 @@ func main() {
 	command := os.Args[1]
 
 	switch command {
-	case "check":
-		runCheck()
 	case "version":
 		fmt.Printf("composeguard %s \n", resolvedVersion())
 	case "init":
 		runInit()
+	case "discover":
+		runDiscover()
+	case "check":
+		runCheck()
 	case "install-systemd":
 		runInstallSystemd()
 	default:
@@ -80,6 +83,24 @@ func runInit() {
 
 docker:
   containers: []
+	system_df:
+		enabled: true
+
+		images:
+			warning_gb: 10
+			critical_gb: 30
+
+		containers:
+			warning_gb: 5
+			critical_gb: 10
+
+		local_volumes:
+			warning_gb: 10
+			critical_gb: 30
+
+		build_cache:
+			warning_gb: 10
+			critical_gb: 30
 
 disk:
   paths:
@@ -295,8 +316,38 @@ func hasWarning(results []checker.Result) bool {
 	return false
 }
 
-func hasArg(name string) bool {
-	return slices.Contains(os.Args, name)
+func runDiscover() {
+	configPath := getArgValue("--config")
+	if configPath == "" {
+		configPath = defaultConfigPath
+	}
+
+	runningOnly := hasArg("--running-only")
+	writeToConfig := hasArg("--write")
+	showTable := hasArg("--table")
+
+	containers, err := discovery.DiscoverDockerContainers(runningOnly)
+	if err != nil {
+		fmt.Printf("failed to discover containers: %v\n", err)
+		os.Exit(1)
+	}
+
+	if showTable {
+		fmt.Print(discovery.FormatContainersTable(containers))
+	} else {
+		fmt.Print(discovery.FormatContainersYAML(containers))
+	}
+
+	if writeToConfig {
+		names := discovery.ContainerNames(containers)
+
+		if err := discovery.WriterContainersToConfig(configPath, names); err != nil {
+			fmt.Printf("failed to update config: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\nupdated %s with %d container(s)\n", configPath, len(names))
+	}
 }
 
 func printUsage() {
@@ -312,8 +363,19 @@ Usage:
   composeguard check --only http
   composeguard check --only ssl
 	composeguard check --notify telegram
+
+	composeguard discover
+  composeguard discover --table
+  composeguard discover --running-only
+  composeguard discover --write
+  composeguard discover --config composeguard.yaml --write
+
 	composeguard install-systemd
   composeguard version`)
+}
+
+func hasArg(name string) bool {
+	return slices.Contains(os.Args, name)
 }
 
 func getArgValue(name string) string {
