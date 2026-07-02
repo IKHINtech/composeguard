@@ -1,3 +1,4 @@
+// Package dockercheck...
 package dockercheck
 
 import (
@@ -15,23 +16,27 @@ type dockerContainer struct {
 	State  string `json:"State"`
 }
 
+var listContainersFn = listContainers
+
 func CheckContainers(expected []string) []checker.Result {
 	results := make([]checker.Result, 0)
 	if len(expected) == 0 {
 		return results
 	}
 
-	containers, err := listContainers()
+	containers, err := listContainersFn()
 	if err != nil {
 		return []checker.Result{
 			{
 				Name:    "Docker",
 				Status:  checker.StatusCritical,
-				Message: err.Error()},
+				Message: err.Error(),
+			},
 		}
 	}
 
 	for _, name := range expected {
+		name = normalizeName(name)
 		found := false
 
 		for _, container := range containers {
@@ -42,16 +47,17 @@ func CheckContainers(expected []string) []checker.Result {
 
 				if container.State != "running" {
 					status = checker.StatusCritical
-					message = fmt.Sprintf("Container %s is %s (%s)", name, container.State, container.State)
+					message = fmt.Sprintf("Container %s is %s (%s)", name, container.State, container.Status)
 				}
 
 				results = append(results, checker.Result{
-					Name:    "Docker" + name,
+					Name:    "Docker: " + name,
 					Status:  status,
 					Message: message,
 				})
+
+				break
 			}
-			break
 		}
 
 		if !found {
@@ -79,7 +85,7 @@ func listContainers() ([]dockerContainer, error) {
 		return nil, fmt.Errorf("failed to run docker ps: %w", err)
 	}
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	containers := make([]dockerContainer, len(lines))
+	containers := make([]dockerContainer, 0, len(lines))
 
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {

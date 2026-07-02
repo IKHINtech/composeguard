@@ -140,6 +140,7 @@ func runCheck() {
 
 	if only == "" || only == "docker" {
 		results = append(results, dockercheck.CheckContainers(cfg.Docker.Containers)...)
+		results = append(results, dockercheck.CheckSystemDF(cfg.Docker.SystemDF)...)
 	}
 
 	if only == "" || only == "disk" {

@@ -1,3 +1,4 @@
+// Package installer...
 package installer
 
 import (
@@ -21,11 +22,11 @@ func InstallSystemd() error {
 		return fmt.Errorf("install-systemd must be run as root. Try: sudo composeguard install-systemd")
 	}
 
-	if err := ensureDir(defaultConfigDir, 0755); err != nil {
+	if err := ensureDir(defaultConfigDir, 0o755); err != nil {
 		return err
 	}
 
-	if err := ensureDir(defaultSystemdDir, 0755); err != nil {
+	if err := ensureDir(defaultSystemdDir, 0o755); err != nil {
 		return err
 	}
 
@@ -40,7 +41,7 @@ func InstallSystemd() error {
 	if err := writeFile(
 		filepath.Join(defaultSystemdDir, defaultServiceName),
 		[]byte(serviceTemplate()),
-		0644,
+		0o644,
 	); err != nil {
 		return err
 	}
@@ -48,7 +49,7 @@ func InstallSystemd() error {
 	if err := writeFile(
 		filepath.Join(defaultSystemdDir, defaultTimerName),
 		[]byte(timerTemplate()),
-		0644,
+		0o644,
 	); err != nil {
 		return err
 	}
@@ -66,7 +67,7 @@ func installConfigIfMissing() error {
 		return nil
 	}
 
-	return writeFile(target, []byte(defaultConfigTemplate()), 0644)
+	return writeFile(target, []byte(defaultConfigTemplate()), 0o644)
 }
 
 func installEnvIfMissing() error {
@@ -77,7 +78,7 @@ func installEnvIfMissing() error {
 		return nil
 	}
 
-	return writeFile(target, []byte(defaultEnvTemplate()), 0600)
+	return writeFile(target, []byte(defaultEnvTemplate()), 0o600)
 }
 
 func ensureDir(path string, perm os.FileMode) error {
@@ -156,6 +157,24 @@ func defaultConfigTemplate() string {
 
 docker:
   containers: []
+	system_df:
+		enabled: true
+
+		images:
+			warning_gb: 10
+			critical_gb: 30
+
+		containers:
+			warning_gb: 5
+			critical_gb: 10
+
+		local_volumes:
+			warning_gb: 10
+			critical_gb: 30
+
+		build_cache:
+			warning_gb: 10
+			critical_gb: 30
 
 disk:
   paths:

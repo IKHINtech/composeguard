@@ -17,7 +17,8 @@ type Config struct {
 }
 
 type DockerConfig struct {
-	Containers []string `yaml:"containers"`
+	Containers []string             `yaml:"containers"`
+	SystemDF   DockerSystemDFConfig `yaml:"system_df"`
 }
 
 type DiskConfig struct {
@@ -69,4 +70,17 @@ type TelegramConfig struct {
 	BotToken      string `yaml:"bot_token"`
 	ChatID        string `yaml:"chat_id"`
 	OnlyOnProblem bool   `yaml:"only_on_problem"`
+}
+
+type DockerSystemDFConfig struct {
+	Enabled      bool            `yaml:"enabled"`
+	Images       DockerSizeLimit `yaml:"images"`
+	Containers   DockerSizeLimit `yaml:"containers"`
+	LocalVolumes DockerSizeLimit `yaml:"local_volumes"`
+	BuildCache   DockerSizeLimit `yaml:"build_cache"`
+}
+
+type DockerSizeLimit struct {
+	WarningGB  float64 `yaml:"warning_gb"`
+	CriticalGB float64 `yaml:"critical_gb"`
 }
