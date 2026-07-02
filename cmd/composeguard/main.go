@@ -12,6 +12,7 @@ import (
 	"github.com/IKHINtech/composeguard/internal/diskcheck"
 	"github.com/IKHINtech/composeguard/internal/dockercheck"
 	"github.com/IKHINtech/composeguard/internal/httpcheck"
+	"github.com/IKHINtech/composeguard/internal/installer"
 	"github.com/IKHINtech/composeguard/internal/notifier"
 	telegramnotifier "github.com/IKHINtech/composeguard/internal/notifier/telegram"
 	"github.com/IKHINtech/composeguard/internal/sslcheck"
@@ -53,8 +54,17 @@ func main() {
 		fmt.Printf("composeguard %s \n", resolvedVersion())
 	case "init":
 		runInit()
+	case "install-systemd":
+		runInstallSystemd()
 	default:
 		printUsage()
+		os.Exit(1)
+	}
+}
+
+func runInstallSystemd() {
+	if err := installer.InstallSystemd(); err != nil {
+		fmt.Printf("failed to install systemd: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -301,6 +311,7 @@ Usage:
   composeguard check --only http
   composeguard check --only ssl
 	composeguard check --notify telegram
+	composeguard install-systemd
   composeguard version`)
 }
 
