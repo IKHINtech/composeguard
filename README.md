@@ -140,6 +140,25 @@ composeguard check --notify telegram
 
 ```
 
+## Notification cooldown
+
+ComposeGuard stores notification state to avoid repeated Telegram spam.
+
+Example:
+
+```yaml
+notification:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+    only_on_problem: true
+    cooldown_minutes: 60
+
+state:
+  path: ""
+```
+
 ### release
 
 ```bash

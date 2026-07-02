@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime/debug"
 	"slices"
+	"time"
 
 	"github.com/IKHINtech/composeguard/internal/checker"
 	"github.com/IKHINtech/composeguard/internal/config"
@@ -16,6 +17,8 @@ import (
 	"github.com/IKHINtech/composeguard/internal/installer"
 	"github.com/IKHINtech/composeguard/internal/notifier"
 	telegramnotifier "github.com/IKHINtech/composeguard/internal/notifier/telegram"
+	statepkg "github.com/IKHINtech/composeguard/internal/state"
+
 	"github.com/IKHINtech/composeguard/internal/sslcheck"
 )
 
@@ -127,6 +130,10 @@ notification:
     bot_token: "${TELEGRAM_BOT_TOKEN}"
     chat_id: "${TELEGRAM_CHAT_ID}"
     only_on_problem: true
+    cooldown_minutes: 60
+
+state:
+  path: ""
 `
 	if err := os.WriteFile(target, []byte(content), 0o644); err != nil {
 		fmt.Printf("failed to create composeguard.yaml: %v\n", err)
@@ -196,25 +203,86 @@ func runCheck() {
 
 func sendTelegramNotification(cfg *config.Config, results []checker.Result) {
 	telegramCfg := cfg.Notification.Telegram
+
 	if !telegramCfg.Enabled {
-		fmt.Println("telegram notifications are disabled")
+		fmt.Println("telegram notification is disabled in config")
 		return
 	}
 
-	hasProblem := hasCritical(results) || hasWarning(results)
+	statePath := cfg.State.Path
+
+	currentState, err := statepkg.Load(statePath)
+	if err != nil {
+		fmt.Printf("failed to load state file: %v\n", err)
+		return
+	}
+
+	now := time.Now()
+	cleanedResults := cleanResults(results)
+
+	hasProblem := hasCritical(cleanedResults) || hasWarning(cleanedResults)
+
 	if telegramCfg.OnlyOnProblem && !hasProblem {
+		updatedState := statepkg.UpdateAfterNotification(
+			currentState,
+			nil,
+			now,
+			false,
+		)
+
+		if err := statepkg.Save(statePath, updatedState); err != nil {
+			fmt.Printf("failed to save state file: %v\n", err)
+			return
+		}
+
 		fmt.Println("telegram notification skipped: no problem found")
 		return
 	}
 
-	message := notifier.BuidMessage(cfg.ProjectName, cleanResults(results))
+	decision := statepkg.EvaluateNotification(
+		currentState,
+		cleanedResults,
+		telegramCfg.CooldownMinutes,
+		now,
+	)
+
+	if telegramCfg.OnlyOnProblem && !decision.ShouldSend {
+		updatedState := statepkg.UpdateAfterNotification(
+			currentState,
+			decision.Problems,
+			now,
+			false,
+		)
+
+		if err := statepkg.Save(statePath, updatedState); err != nil {
+			fmt.Printf("failed to save state file: %v\n", err)
+			return
+		}
+
+		fmt.Printf("telegram notification skipped: %s\n", decision.Reason)
+		return
+	}
+
+	message := notifier.BuildMessage(cfg.ProjectName, cleanedResults)
 
 	if err := telegramnotifier.Send(telegramCfg, message); err != nil {
 		fmt.Printf("failed to send telegram notification: %v\n", err)
 		return
 	}
 
-	fmt.Println("telegram notification sent")
+	updatedState := statepkg.UpdateAfterNotification(
+		currentState,
+		decision.Problems,
+		now,
+		true,
+	)
+
+	if err := statepkg.Save(statePath, updatedState); err != nil {
+		fmt.Printf("failed to save state file: %v\n", err)
+		return
+	}
+
+	fmt.Printf("telegram notification sent: %s\n", decision.Reason)
 }
 
 func isValidOnly(value string) bool {

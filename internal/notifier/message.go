@@ -9,7 +9,7 @@ import (
 	"github.com/IKHINtech/composeguard/internal/checker"
 )
 
-func BuidMessage(projectName string, results []checker.Result) string {
+func BuildMessage(projectName string, results []checker.Result) string {
 	if projectName == "" {
 		projectName = "composeguard"
 	}

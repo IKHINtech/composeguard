@@ -15,6 +15,7 @@ const (
 	defaultTimerName   = "composeguard.timer"
 	defaultEnvName     = "composeguard.env"
 	defaultConfigName  = "composeguard.yaml"
+	defaultStateDir    = "/var/lib/composeguard"
 )
 
 func InstallSystemd() error {
@@ -23,6 +24,14 @@ func InstallSystemd() error {
 	}
 
 	if err := ensureDir(defaultConfigDir, 0o755); err != nil {
+		return err
+	}
+
+	if err := ensureDir(defaultBinaryPath, 0o755); err != nil {
+		return err
+	}
+
+	if err := ensureDir(defaultStateDir, 0755); err != nil {
 		return err
 	}
 
@@ -204,6 +213,10 @@ notification:
     bot_token: "${TELEGRAM_BOT_TOKEN}"
     chat_id: "${TELEGRAM_CHAT_ID}"
     only_on_problem: true
+    cooldown_minutes: 60
+
+state:
+	path: "/var/lib/composeguard/state.json"
 `
 }
 

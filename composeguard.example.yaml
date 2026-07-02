@@ -54,3 +54,7 @@ notification:
     bot_token: "${TELEGRAM_BOT_TOKEN}"
     chat_id: "${TELEGRAM_CHAT_ID}"
     only_on_problem: true
+    cooldown_minutes: 60
+
+state:
+  path: ""

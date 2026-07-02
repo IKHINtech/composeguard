@@ -168,3 +168,28 @@ OnUnitActiveSec=5min
 OnUnitActiveSec=15min
 OnUnitActiveSec=1h
 ```
+
+Tambahkan di config example:
+
+```yaml
+notification:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+    only_on_problem: true
+    cooldown_minutes: 60
+
+state:
+  path: "/var/lib/composeguard/state.json"
+```
+
+## State file
+
+ComposeGuard uses a state file to prevent repeated Telegram alerts for the same problem.
+
+Default systemd path:
+
+```text
+/var/lib/composeguard/state.json
+```

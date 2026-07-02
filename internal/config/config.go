@@ -14,6 +14,7 @@ type Config struct {
 	HTTP         HTTPConfig         `yaml:"http"`
 	SSL          SSLConfig          `yaml:"ssl"`
 	Notification NotificationConfig `yaml:"notification"`
+	State        StateConfig        `yaml:"state"`
 }
 
 type DockerConfig struct {
@@ -66,10 +67,15 @@ type NotificationConfig struct {
 }
 
 type TelegramConfig struct {
-	Enabled       bool   `yaml:"enabled"`
-	BotToken      string `yaml:"bot_token"`
-	ChatID        string `yaml:"chat_id"`
-	OnlyOnProblem bool   `yaml:"only_on_problem"`
+	Enabled         bool   `yaml:"enabled"`
+	BotToken        string `yaml:"bot_token"`
+	ChatID          string `yaml:"chat_id"`
+	OnlyOnProblem   bool   `yaml:"only_on_problem"`
+	CooldownMinutes int    `yaml:"cooldown_minutes"`
+}
+
+type StateConfig struct {
+	Path string `yaml:"path"`
 }
 
 type DockerSystemDFConfig struct {
